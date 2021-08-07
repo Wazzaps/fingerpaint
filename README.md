@@ -25,8 +25,11 @@ fingerpaint -o painting.png
 # Play with style
 fingerpaint --dark -o painting.png
 
-# Copy to clipboard
-fingerpaint --hint='Press any key or click to finish drawing'\n'Image will be copied to clipboard' -o - | xclip -sel clip -t image/png
+# Copy to clipboard (using bash)
+fingerpaint --hint=$'Press any key or click to finish drawing\nImage will be copied to clipboard' -o - | xclip -sel clip -t image/png
+
+# Copy to clipboard (using fish)
+fingerpaint --hint="Press any key or click to finish drawing"\n"Image will be copied to clipboard" -o - | xclip -sel clip -t image/png
 ```
 
 ## Install from source
