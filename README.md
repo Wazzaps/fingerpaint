@@ -14,6 +14,8 @@ No Wayland support at the moment, I need a simple `xinput disable ...` replaceme
 
 ## Installation & Usage
 
+- Via pip:
+
 ```shell
 pip3 install fingerpaint
 ```
@@ -31,15 +33,20 @@ fingerpaint --hint=$'Press any key or click to finish drawing\nImage will be cop
 # Copy to clipboard (using fish)
 fingerpaint --hint="Press any key or click to finish drawing"\n"Image will be copied to clipboard" -o - | xclip -sel clip -t image/png
 ```
+- Arch Linux / Manjaro:
+
+You can install the package via the AUR: [fingerpaint](https://aur.archlinux.org/packages/fingerpaint/)
+
+```shell
+git clone https://aur.archlinux.org/fingerpaint.git
+cd fingerpaint
+makepkg -sic
+```
 
 ## Install from source
 
-Choose one of the following according to your distro:
-
-- Ubuntu/Debian: `apt install xinput python3-pip python3-tk`
-- [PRs welcome]
-
-Then run: `pip3 install .` in the project directory 
+Clone the repo, then manually install via `python setup.py install`. Alternatively, you can use `pip3` to install the local files, shown here for Ubuntu:
+`apt install xinput python3-pip python3-tk`, then run: `pip3 install .` in the project directory 
 
 ## Uses
 
