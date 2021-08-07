@@ -44,7 +44,7 @@ def make_ui(events, size, devname, args):
 
     canvas = tkinter.Canvas(top, bg=args.background, height=size[1], width=size[0], borderwidth=0, highlightthickness=0)
     canvas.create_text(
-        (size[0] / 2, size[1] * 9 / 10), fill=args.hint_color, font=hint_font,
+        (size[0] / 2, size[1] * 9 / 10), fill=args.hint_color, font=hint_font, justify=tkinter.CENTER,
         text=args.hint
     )
     aa_factor = AA_FACTOR * OUTPUT_SCALE
