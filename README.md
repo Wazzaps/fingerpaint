@@ -15,7 +15,7 @@ No Wayland support at the moment, I need a simple `xinput disable ...` replaceme
 ## Installation
 
 ```shell
-pip install fingerpaint
+pip3 install fingerpaint
 ```
 
 ## Install from source
@@ -25,7 +25,7 @@ Choose one of the following according to your distro:
 - Ubuntu/Debian: `apt install xinput python3-pip python3-tk`
 - [PRs welcome]
 
-Then run: `pip install .` in the project directory 
+Then run: `pip3 install .` in the project directory 
 
 ## Uses
 
