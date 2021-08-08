@@ -2,6 +2,7 @@
 import _tkinter
 import argparse
 import contextlib
+import os
 import pkg_resources
 import subprocess as sp
 import sys
@@ -20,12 +21,26 @@ OUTPUT_SCALE = 2
 
 
 @contextlib.contextmanager
-def lock_pointer(devname):
+def lock_pointer_x11(devname):
     sp.call(['xinput', 'disable', devname])
     try:
         yield
     finally:
         sp.call(['xinput', 'enable', devname])
+
+
+@contextlib.contextmanager
+def lock_pointer_wayland():
+    prev_value = sp.check_output(['dconf', 'read', '/org/gnome/desktop/peripherals/touchpad/send-events']).strip()
+    if prev_value not in (b"'enabled'", b"'disabled'", b"'disabled-on-external-mouse'"):
+        print(f'Unexpected touchpad state: "{prev_value.decode()}", are you using Gnome?', file=sys.stderr)
+        exit(1)
+
+    sp.call(['dconf', 'write', '/org/gnome/desktop/peripherals/touchpad/send-events', "'disabled'"])
+    try:
+        yield
+    finally:
+        sp.call(['dconf', 'write', '/org/gnome/desktop/peripherals/touchpad/send-events', prev_value])
 
 
 def make_ui(events, size, devname, args):
@@ -53,7 +68,12 @@ def make_ui(events, size, devname, args):
 
     canvas.pack()
     try:
-        with lock_pointer(devname):
+        if os.environ['XDG_SESSION_TYPE'] == 'wayland':
+            lock_pointer = lock_pointer_wayland()
+        else:
+            lock_pointer = lock_pointer_x11(devname)
+
+        with lock_pointer:
             while True:
                 lines = next(events)
                 for line in lines:

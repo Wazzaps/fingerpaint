@@ -6,7 +6,7 @@ Pressing any key or clicking the touchpad will finish the drawing.
 
 Your touchpad will not control the cursor while drawing, though external mice should still work.
 
-No Wayland support at the moment, I need a simple `xinput disable ...` replacement.
+It has support for both X11 (all desktop environments), and Wayland (just Gnome at the moment).
 
 ## Video:
 
