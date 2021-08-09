@@ -23,7 +23,9 @@ pip3 install fingerpaint
 
 ### Arch / Manjaro
 
-[Install `fingerpaint` via the AUR](https://aur.archlinux.org/packages/fingerpaint/)
+If you are using X11, [Install `fingerpaint` via the AUR](https://aur.archlinux.org/packages/fingerpaint/).
+
+If you are using Wayland, [Install `fingerpaint-wayland` via the AUR](https://aur.archlinux.org/packages/fingerpaint-wayland/).
 
 ## Usage examples
 ```shell
