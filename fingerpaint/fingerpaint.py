@@ -84,8 +84,8 @@ def make_ui(events, size, devname, args):
                         width=args.line_thickness, capstyle=tkinter.ROUND, fill=args.line_color
                     )
                     image_canvas.line(
-                        (int(projected_start[0] * aa_factor), int(projected_start[1] * aa_factor),
-                         int(projected_end[0] * aa_factor), int(projected_end[1] * aa_factor)),
+                        ((int(projected_start[0] * aa_factor), int(projected_start[1] * aa_factor)),
+                         (int(projected_end[0] * aa_factor), int(projected_end[1] * aa_factor))),
                         width=int(args.line_thickness * aa_factor), joint='curve', fill=(0, 0, 0)
                     )
                     offset = (args.line_thickness * aa_factor - 1) / 2
