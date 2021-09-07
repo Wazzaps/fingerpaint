@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='fingerpaint',
-    version='1.2',
+    version='1.2.1',
     entry_points={
         'console_scripts': 'fingerpaint=fingerpaint.fingerpaint:cli'
     },
@@ -27,7 +27,7 @@ setuptools.setup(
         "Topic :: Utilities",
     ],
     install_requires=[
-        'evdev',
+        'evdev >= 1.3.0',
         'Pillow',
         'pyudev'
     ],
