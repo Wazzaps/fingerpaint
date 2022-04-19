@@ -32,6 +32,11 @@ def lock_pointer_x11(devname):
 @contextlib.contextmanager
 def lock_pointer_wayland():
     prev_value = sp.check_output(['dconf', 'read', '/org/gnome/desktop/peripherals/touchpad/send-events']).strip()
+
+    # Fix for arch based distros
+    if prev_value == '':
+        prev_value = "'enabled'"
+
     if prev_value not in (b"'enabled'", b"'disabled'", b"'disabled-on-external-mouse'"):
         print(f'Unexpected touchpad state: "{prev_value.decode()}", are you using Gnome?', file=sys.stderr)
         exit(1)
@@ -283,6 +288,13 @@ def cli():
         exit(1)
     except FileNotFoundError:
         print('`xinput` binary not installed, install it with your package manager', file=sys.stderr)
+        exit(1)
+
+    pillow_version = PIL.__version__.split('.')
+    pillow_version = int(pillow_version[0]), int(pillow_version[1])
+    if pillow_version[0] < 5 or (pillow_version[0] == 5 and pillow_version[1] < 3):
+        print('Pillow version 5.3.0 or higher is required', file=sys.stderr)
+        print('Please run:  python3 -m pip install -U Pillow', file=sys.stderr)
         exit(1)
 
     main(args)
