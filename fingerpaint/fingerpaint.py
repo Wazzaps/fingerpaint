@@ -48,9 +48,17 @@ def lock_pointer_wayland():
         sp.call(['dconf', 'write', '/org/gnome/desktop/peripherals/touchpad/send-events', prev_value])
 
 
-def make_ui(events, size, devname, args):
+def make_ui(events, image_size, devname, args):
     top = tkinter.Tk()
-    top.resizable(False, False)
+
+    if args.fullscreen:
+        top.attributes('-fullscreen', True)
+        top.update()
+        window_size = top.winfo_width(), top.winfo_height()
+    else:
+        top.resizable(False, False)
+        window_size = image_size
+
     top.title(args.title)
 
     def exit_handler(_):
@@ -62,16 +70,16 @@ def make_ui(events, size, devname, args):
     hint_font = tkinter.font.Font(family=args.hint_font,
                                   size=args.hint_size, weight=args.hint_font_weight)
 
-    canvas = tkinter.Canvas(top, bg=args.background, height=size[1], width=size[0], borderwidth=0, highlightthickness=0)
+    canvas = tkinter.Canvas(top, bg=args.background, height=window_size[1], width=window_size[0], borderwidth=0, highlightthickness=0)
     canvas.create_text(
-        (size[0] / 2, size[1] * 9 / 10), fill=args.hint_color, font=hint_font, justify=tkinter.CENTER,
+        (window_size[0] / 2, window_size[1] * 9 / 10), fill=args.hint_color, font=hint_font, justify=tkinter.CENTER,
         text=args.hint
     )
     aa_factor = AA_FACTOR * OUTPUT_SCALE
-    image = PIL.Image.new("RGBA", (size[0] * aa_factor, size[1] * aa_factor), (0, 0, 0, 0))
+    image = PIL.Image.new("RGBA", (image_size[0] * aa_factor, image_size[1] * aa_factor), (0, 0, 0, 0))
     image_canvas = PIL.ImageDraw.Draw(image)
 
-    canvas.pack()
+    canvas.pack(fill=tkinter.BOTH, expand=True)
     try:
         if os.environ['XDG_SESSION_TYPE'] == 'wayland':
             lock_pointer = lock_pointer_wayland()
@@ -82,26 +90,28 @@ def make_ui(events, size, devname, args):
             while True:
                 lines = next(events)
                 for line in lines:
-                    projected_start = (line[0][0] * size[0], line[0][1] * size[1])
-                    projected_end = (line[1][0] * size[0], line[1][1] * size[1])
+                    screen_projected_start = (line[0][0] * window_size[0], line[0][1] * window_size[1])
+                    screen_projected_end = (line[1][0] * window_size[0], line[1][1] * window_size[1])
+                    image_projected_start = (line[0][0] * image_size[0], line[0][1] * image_size[1])
+                    image_projected_end = (line[1][0] * image_size[0], line[1][1] * image_size[1])
                     canvas.create_line(
-                        projected_start, projected_end,
+                        screen_projected_start, screen_projected_end,
                         width=args.line_thickness, capstyle=tkinter.ROUND, fill=args.line_color
                     )
                     image_canvas.line(
-                        ((int(projected_start[0] * aa_factor), int(projected_start[1] * aa_factor)),
-                         (int(projected_end[0] * aa_factor), int(projected_end[1] * aa_factor))),
+                        ((int(image_projected_start[0] * aa_factor), int(image_projected_start[1] * aa_factor)),
+                         (int(image_projected_end[0] * aa_factor), int(image_projected_end[1] * aa_factor))),
                         width=int(args.line_thickness * aa_factor), joint='curve', fill=(0, 0, 0)
                     )
                     offset = (args.line_thickness * aa_factor - 1) / 2
                     image_canvas.ellipse(
-                        (int(projected_start[0] * aa_factor - offset), int(projected_start[1] * aa_factor - offset),
-                         int(projected_start[0] * aa_factor + offset), int(projected_start[1] * aa_factor + offset)),
+                        (int(image_projected_start[0] * aa_factor - offset), int(image_projected_start[1] * aa_factor - offset),
+                         int(image_projected_start[0] * aa_factor + offset), int(image_projected_start[1] * aa_factor + offset)),
                         fill=(0, 0, 0)
                     )
                     image_canvas.ellipse(
-                        (int(projected_end[0] * aa_factor - offset), int(projected_end[1] * aa_factor - offset),
-                         int(projected_end[0] * aa_factor + offset), int(projected_end[1] * aa_factor + offset)),
+                        (int(image_projected_end[0] * aa_factor - offset), int(image_projected_end[1] * aa_factor - offset),
+                         int(image_projected_end[0] * aa_factor + offset), int(image_projected_end[1] * aa_factor + offset)),
                         fill=(0, 0, 0)
                     )
 
@@ -110,7 +120,7 @@ def make_ui(events, size, devname, args):
     except (KeyboardInterrupt, _tkinter.TclError):
         del events
 
-        image = image.resize((size[0] * OUTPUT_SCALE, size[1] * OUTPUT_SCALE), resample=PIL.Image.ANTIALIAS)
+        image = image.resize((image_size[0] * OUTPUT_SCALE, image_size[1] * OUTPUT_SCALE), resample=PIL.Image.ANTIALIAS)
         if args.output == '-':
             print('Writing output to stdout', file=sys.stderr)
             with BytesIO() as temp_buf:
@@ -223,6 +233,10 @@ def cli():
     parser.add_argument(
         '--height', type=int,
         help='Height of the paint area (width is determined automatically)'
+    )
+    parser.add_argument(
+        '--fullscreen', action='store_true',
+        help='Make the canvas fullscreen'
     )
     parser.add_argument(
         '--title', type=str, default='FingerPaint',
