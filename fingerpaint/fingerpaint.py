@@ -295,14 +295,27 @@ def cli():
     if args.width is None and args.height is None:
         args.width = DEFAULT_WIDTH
 
-    try:
-        sp.check_output(['xinput', '--version'])
-    except sp.CalledProcessError:
-        print('`xinput` fails to run, make sure you\'re using X11 (Wayland is not supported yet)', file=sys.stderr)
-        exit(1)
-    except FileNotFoundError:
-        print('`xinput` binary not installed, install it with your package manager', file=sys.stderr)
-        exit(1)
+
+    if os.environ['XDG_SESSION_TYPE'] == 'wayland':
+        try:
+            sp.check_output(['dconf', 'help'])
+        except sp.CalledProcessError:
+            print('`dconf` fails to run, it\'s required in Wayland based desktop environments', file=sys.stderr)
+            exit(1)
+        except FileNotFoundError:
+            print('`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)', file=sys.stderr)
+            print('It\'s required for Wayland based desktop environments.', file=sys.stderr)
+            exit(1)
+    else:
+        try:
+            sp.check_output(['xinput', '--version'])
+        except sp.CalledProcessError:
+            print('`xinput` fails to run, it\'s required in X11 based desktop environments', file=sys.stderr)
+            exit(1)
+        except FileNotFoundError:
+            print('`xinput` binary not installed, install it with your package manager (Called `xinput` on Ubuntu, or `xorg-xinput` on Arch)', file=sys.stderr)
+            print('It\'s required for X11 based desktop environments.', file=sys.stderr)
+            exit(1)
 
     pillow_version = PIL.__version__.split('.')
     pillow_version = int(pillow_version[0]), int(pillow_version[1])
