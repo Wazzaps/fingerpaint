@@ -27,6 +27,12 @@ If you are using X11, [Install `fingerpaint` via the AUR](https://aur.archlinux.
 
 If you are using Wayland, [Install `fingerpaint-wayland` via the AUR](https://aur.archlinux.org/packages/fingerpaint-wayland/).
 
+### Nix (With Flakes)
+
+```shell
+nix profile install github:Wazzaps/fingerpaint
+```
+
 ## Usage examples
 ```shell
 # Simple usage
