@@ -296,6 +296,10 @@ def cli():
         args.width = DEFAULT_WIDTH
 
 
+    if 'XDG_SESSION_TYPE' not in os.environ:
+        print('You don\'t seem to be running in a graphical environment ("XDG_SESSION_TYPE" is not set)')
+        exit(1)
+
     if os.environ['XDG_SESSION_TYPE'] == 'wayland':
         try:
             sp.check_output(['dconf', 'help'])

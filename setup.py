@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='fingerpaint',
-    version='1.2.5',
+    version='1.2.6',
     entry_points={
         'console_scripts': 'fingerpaint=fingerpaint.fingerpaint:cli'
     },
@@ -34,4 +34,5 @@ setuptools.setup(
     package_data={
         'fingerpaint': ['data/fix_permissions.sh'],
     },
+    python_requires='>=3.7',
 )
