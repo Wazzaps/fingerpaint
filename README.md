@@ -1,5 +1,7 @@
 # FingerPaint
 
+[![PyPI link](https://img.shields.io/pypi/v/fingerpaint.svg)](https://pypi.python.org/pypi/fingerpaint/) [![Download count](https://pepy.tech/badge/fingerpaint)](https://pepy.tech/project/fingerpaint) [![License](https://img.shields.io/pypi/l/fingerpaint.svg)](https://pypi.python.org/pypi/fingerpaint/) [![Sponsor this project](https://img.shields.io/static/v1?label=Sponsor&logo=github-sponsors&logoColor=ffffff&color=777&message=This%20Project)](https://github.com/sponsors/Wazzaps)
+
 This utility lets you draw using your laptop's touchpad on Linux.
 
 Pressing any key or clicking the touchpad will finish the drawing.
