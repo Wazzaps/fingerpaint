@@ -31,7 +31,7 @@ def lock_pointer_x11(devname):
 
 @contextlib.contextmanager
 def lock_pointer_wayland():
-    prev_value = sp.check_output(['dconf', 'read', '/org/gnome/desktop/peripherals/touchpad/send-events']).strip()
+    prev_value = sp.check_output(['gsettings', 'get', 'org.gnome.desktop.peripherals.touchpad', 'send-events']).strip()
 
     # Fix for arch based distros
     if prev_value == '':
@@ -120,7 +120,7 @@ def make_ui(events, image_size, devname, args):
     except (KeyboardInterrupt, _tkinter.TclError):
         del events
 
-        image = image.resize((image_size[0] * OUTPUT_SCALE, image_size[1] * OUTPUT_SCALE), resample=PIL.Image.ANTIALIAS)
+        image = image.resize((image_size[0] * OUTPUT_SCALE, image_size[1] * OUTPUT_SCALE), resample=PIL.Image.LANCZOS)
         if args.output == '-':
             print('Writing output to stdout', file=sys.stderr)
             with BytesIO() as temp_buf:
