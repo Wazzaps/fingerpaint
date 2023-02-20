@@ -19,7 +19,7 @@ It has support for both X11 (all desktop environments), and Wayland (just Gnome 
 ### Ubuntu / Debian
 
 ```shell
-apt install xinput python3-pip python3-tk
+sudo apt install libglib2.0-bin xinput python3-pip python3-tk
 pip3 install fingerpaint
 ```
 
