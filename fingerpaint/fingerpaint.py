@@ -13,6 +13,7 @@ import PIL.ImageDraw
 import evdev
 import pyudev
 from fingerpaint.sandbox_utils import GSETTINGS_SCHEMA_DIR_PARAM, get_output_file_path, IS_SANDBOXED
+from fingerpaint.tk_messagebox import message_box
 from io import BytesIO
 
 DEFAULT_WIDTH = 600
@@ -44,14 +45,21 @@ def lock_pointer_wayland():
         prev_value = "'enabled'"
 
     if prev_value not in (b"'enabled'", b"'disabled'", b"'disabled-on-external-mouse'"):
-        print(f'Unexpected touchpad state: "{prev_value.decode()}", are you using Gnome?', file=sys.stderr)
-        exit(1)
+        fatal_error(f'Unexpected touchpad state: "{prev_value.decode()}", are you using Gnome?')
 
     sp.call(['dconf', 'write', '/org/gnome/desktop/peripherals/touchpad/send-events', "'disabled'"])
     try:
         yield
     finally:
         sp.call(['dconf', 'write', '/org/gnome/desktop/peripherals/touchpad/send-events', prev_value])
+
+
+def fatal_error(message):
+    if IS_SANDBOXED:
+        message_box('Fingerpaint Error', message)
+    else:
+        print(message, file=sys.stderr)
+    exit(1)
 
 
 def make_ui(events, image_size, devname, args):
@@ -168,14 +176,14 @@ def permission_error():
             sp.call(['pkexec', fix_perms_script])
         else:
             print('Canceled.', file=sys.stderr)
-    else:
-        print('Failed to access touchpad!', file=sys.stderr)
-        print('To fix this, Please run the following commands, then rerun fingerpaint:', file=sys.stderr)
-        print('''  echo 'ENV{ID_INPUT_TOUCHPAD}=="1", MODE="0664"' | sudo tee /etc/udev/rules.d/99-touchpad-access.rules''', file=sys.stderr)
-        print('  sudo udevadm control --reload-rules', file=sys.stderr)
-        print('  sudo udevadm trigger', file=sys.stderr)
 
-    exit(1)
+        exit(1)
+    else:
+        fatal_error(
+            'Failed to access touchpad!\n'
+            'To fix this, Please run the following command, then rerun fingerpaint:\n'
+            f'  sudo {fix_perms_script}'
+        )
 
 
 def get_touchpad(udev):
@@ -193,8 +201,7 @@ def main(args):
     udev = pyudev.Context()
     touchpad, devname = get_touchpad(udev)
     if touchpad is None:
-        print('No touchpad found', file=sys.stderr)
-        exit(1)
+        fatal_error('No touchpad found')
     x_absinfo = touchpad.absinfo(evdev.ecodes.ABS_X)
     y_absinfo = touchpad.absinfo(evdev.ecodes.ABS_Y)
     val_range = (x_absinfo.max - x_absinfo.min, y_absinfo.max - y_absinfo.min)
@@ -243,36 +250,37 @@ def main(args):
 
 def validations():
     if 'XDG_SESSION_TYPE' not in os.environ:
-        print('You don\'t seem to be running in a graphical environment ("XDG_SESSION_TYPE" is not set)')
-        exit(1)
+        fatal_error('You don\'t seem to be running in a graphical environment ("XDG_SESSION_TYPE" is not set)')
 
     if os.environ['XDG_SESSION_TYPE'] == 'wayland':
         try:
             sp.check_output(['dconf', 'help'])
         except sp.CalledProcessError:
-            print('`dconf` fails to run, it\'s required in Wayland based desktop environments', file=sys.stderr)
+            fatal_error('`dconf` fails to run, it\'s required in Wayland based desktop environments')
             exit(1)
         except FileNotFoundError:
-            print('`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)', file=sys.stderr)
-            print('It\'s required for Wayland based desktop environments.', file=sys.stderr)
-            exit(1)
+            fatal_error(
+                '`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)\n'
+                'It\'s required for Wayland based desktop environments.'
+            )
     else:
         try:
             sp.check_output(['xinput', '--version'])
         except sp.CalledProcessError:
-            print('`xinput` fails to run, it\'s required in X11 based desktop environments', file=sys.stderr)
-            exit(1)
+            fatal_error('`xinput` fails to run, it\'s required in X11 based desktop environments')
         except FileNotFoundError:
-            print('`xinput` binary not installed, install it with your package manager (Called `xinput` on Ubuntu, or `xorg-xinput` on Arch)', file=sys.stderr)
-            print('It\'s required for X11 based desktop environments.', file=sys.stderr)
-            exit(1)
+            fatal_error(
+                '`xinput` binary not installed, install it with your package manager (Called `xinput` on Ubuntu, or `xorg-xinput` on Arch)\n'
+                'It\'s required for X11 based desktop environments.'
+            )
 
     pillow_version = PIL.__version__.split('.')
     pillow_version = int(pillow_version[0]), int(pillow_version[1])
     if pillow_version[0] < 5 or (pillow_version[0] == 5 and pillow_version[1] < 3):
-        print('Pillow version 5.3.0 or higher is required', file=sys.stderr)
-        print('Please run:  python3 -m pip install -U Pillow', file=sys.stderr)
-        exit(1)
+        fatal_error(
+            'Pillow version 5.3.0 or higher is required\n'
+            'Please run:  python3 -m pip install -U Pillow'
+        )
 
 
 def cli():
@@ -341,16 +349,16 @@ def cli():
         args.hint_color = '#555555'
 
     if args.width is not None and args.height is not None:
-        print('Specify EITHER --width or --height, the other will be determined by touchpad size', file=sys.stderr)
-        exit(1)
+        fatal_error('Specify EITHER --width or --height, the other will be determined by touchpad size')
 
     if args.width is None and args.height is None:
         args.width = DEFAULT_WIDTH
 
     if args.output not in ('-', None) and IS_SANDBOXED:
-        print('Cannot write to arbitrary file path in sandboxed mode', file=sys.stderr)
-        print("Please either omit `--output` or use `--output=-` for stdout if you know what you're doing", file=sys.stderr)
-        exit(1)
+        fatal_error(
+            'Cannot write to arbitrary file path in sandboxed mode\n'
+            "Please either omit `--output` or use `--output=-` for stdout if you know what you're doing"
+        )
 
     validations()
 
