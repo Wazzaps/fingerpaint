@@ -20,7 +20,8 @@ It has support for both X11 (all desktop environments), and Wayland (just Gnome 
 
 ```shell
 sudo apt install libglib2.0-bin xinput python3-pip python3-tk
-pip3 install fingerpaint
+sudo pip3 install fingerpaint
+sudo fingerpaint --fix-perms  # This command lets you run the utility without `sudo`
 ```
 
 ### Arch / Manjaro

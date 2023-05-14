@@ -8,16 +8,18 @@ import subprocess as sp
 import sys
 import tkinter
 import tkinter.font
-from io import BytesIO
-
 import PIL.Image
 import PIL.ImageDraw
 import evdev
 import pyudev
+from fingerpaint.sandbox_utils import GSETTINGS_SCHEMA_DIR_PARAM, get_output_file_path, IS_SANDBOXED
+from io import BytesIO
 
 DEFAULT_WIDTH = 600
 AA_FACTOR = 4  # Anti-aliasing
 OUTPUT_SCALE = 2
+
+fix_perms_script = pkg_resources.resource_filename('fingerpaint', 'data/fix_permissions.sh')
 
 
 @contextlib.contextmanager
@@ -31,7 +33,11 @@ def lock_pointer_x11(devname):
 
 @contextlib.contextmanager
 def lock_pointer_wayland():
-    prev_value = sp.check_output(['gsettings', 'get', 'org.gnome.desktop.peripherals.touchpad', 'send-events']).strip()
+    prev_value = sp.check_output(
+        ['gsettings'] +
+        GSETTINGS_SCHEMA_DIR_PARAM +
+        ['get', 'org.gnome.desktop.peripherals.touchpad', 'send-events']
+    ).strip()
 
     # Fix for arch based distros
     if prev_value == '':
@@ -121,7 +127,14 @@ def make_ui(events, image_size, devname, args):
         del events
 
         image = image.resize((image_size[0] * OUTPUT_SCALE, image_size[1] * OUTPUT_SCALE), resample=PIL.Image.LANCZOS)
-        if args.output == '-':
+        if args.output is None:
+            path = get_output_file_path(window_title="Save image")
+            if path:
+                print('Writing output to', path.name, file=sys.stderr)
+                image.save(str(path), format='png')
+            else:
+                print('Save was canceled', file=sys.stderr)
+        elif args.output == '-':
             print('Writing output to stdout', file=sys.stderr)
             with BytesIO() as temp_buf:
                 image.save(temp_buf, format='png')
@@ -148,14 +161,19 @@ def get_device_name(dev):
 
 
 def permission_error():
-    print('Failed to access touchpad!', file=sys.stderr)
-    if sys.stdin.isatty():
+    if sys.stdin.isatty() and not IS_SANDBOXED:
         print('Touchpad access is currently restricted. Would you like to unrestrict it?', file=sys.stderr)
         response = input('[Yes]/no: ')
         if response.lower() in ('y', 'ye', 'yes', 'ok', 'sure', ''):
-            sp.call(['pkexec', pkg_resources.resource_filename('fingerpaint', 'data/fix_permissions.sh')])
+            sp.call(['pkexec', fix_perms_script])
         else:
             print('Canceled.', file=sys.stderr)
+    else:
+        print('Failed to access touchpad!', file=sys.stderr)
+        print('To fix this, Please run the following commands, then rerun fingerpaint:', file=sys.stderr)
+        print('''  echo 'ENV{ID_INPUT_TOUCHPAD}=="1", MODE="0664"' | sudo tee /etc/udev/rules.d/99-touchpad-access.rules''', file=sys.stderr)
+        print('  sudo udevadm control --reload-rules', file=sys.stderr)
+        print('  sudo udevadm trigger', file=sys.stderr)
 
     exit(1)
 
@@ -223,6 +241,40 @@ def main(args):
     del touchpad
 
 
+def validations():
+    if 'XDG_SESSION_TYPE' not in os.environ:
+        print('You don\'t seem to be running in a graphical environment ("XDG_SESSION_TYPE" is not set)')
+        exit(1)
+
+    if os.environ['XDG_SESSION_TYPE'] == 'wayland':
+        try:
+            sp.check_output(['dconf', 'help'])
+        except sp.CalledProcessError:
+            print('`dconf` fails to run, it\'s required in Wayland based desktop environments', file=sys.stderr)
+            exit(1)
+        except FileNotFoundError:
+            print('`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)', file=sys.stderr)
+            print('It\'s required for Wayland based desktop environments.', file=sys.stderr)
+            exit(1)
+    else:
+        try:
+            sp.check_output(['xinput', '--version'])
+        except sp.CalledProcessError:
+            print('`xinput` fails to run, it\'s required in X11 based desktop environments', file=sys.stderr)
+            exit(1)
+        except FileNotFoundError:
+            print('`xinput` binary not installed, install it with your package manager (Called `xinput` on Ubuntu, or `xorg-xinput` on Arch)', file=sys.stderr)
+            print('It\'s required for X11 based desktop environments.', file=sys.stderr)
+            exit(1)
+
+    pillow_version = PIL.__version__.split('.')
+    pillow_version = int(pillow_version[0]), int(pillow_version[1])
+    if pillow_version[0] < 5 or (pillow_version[0] == 5 and pillow_version[1] < 3):
+        print('Pillow version 5.3.0 or higher is required', file=sys.stderr)
+        print('Please run:  python3 -m pip install -U Pillow', file=sys.stderr)
+        exit(1)
+
+
 def cli():
     parser = argparse.ArgumentParser(description='Gets a finger painting from the user using the touchpad, useful for '
                                                  'document signatures or complex character input, etc.')
@@ -278,7 +330,7 @@ def cli():
         help='Line thickness (default: 6)'
     )
     parser.add_argument(
-        '-o', '--output', type=str, required=True,
+        '-o', '--output', type=str,
         help='Output file path'
     )
     args = parser.parse_args()
@@ -295,37 +347,11 @@ def cli():
     if args.width is None and args.height is None:
         args.width = DEFAULT_WIDTH
 
-
-    if 'XDG_SESSION_TYPE' not in os.environ:
-        print('You don\'t seem to be running in a graphical environment ("XDG_SESSION_TYPE" is not set)')
+    if args.output not in ('-', None) and IS_SANDBOXED:
+        print('Cannot write to arbitrary file path in sandboxed mode', file=sys.stderr)
+        print("Please either omit `--output` or use `--output=-` for stdout if you know what you're doing", file=sys.stderr)
         exit(1)
 
-    if os.environ['XDG_SESSION_TYPE'] == 'wayland':
-        try:
-            sp.check_output(['dconf', 'help'])
-        except sp.CalledProcessError:
-            print('`dconf` fails to run, it\'s required in Wayland based desktop environments', file=sys.stderr)
-            exit(1)
-        except FileNotFoundError:
-            print('`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)', file=sys.stderr)
-            print('It\'s required for Wayland based desktop environments.', file=sys.stderr)
-            exit(1)
-    else:
-        try:
-            sp.check_output(['xinput', '--version'])
-        except sp.CalledProcessError:
-            print('`xinput` fails to run, it\'s required in X11 based desktop environments', file=sys.stderr)
-            exit(1)
-        except FileNotFoundError:
-            print('`xinput` binary not installed, install it with your package manager (Called `xinput` on Ubuntu, or `xorg-xinput` on Arch)', file=sys.stderr)
-            print('It\'s required for X11 based desktop environments.', file=sys.stderr)
-            exit(1)
-
-    pillow_version = PIL.__version__.split('.')
-    pillow_version = int(pillow_version[0]), int(pillow_version[1])
-    if pillow_version[0] < 5 or (pillow_version[0] == 5 and pillow_version[1] < 3):
-        print('Pillow version 5.3.0 or higher is required', file=sys.stderr)
-        print('Please run:  python3 -m pip install -U Pillow', file=sys.stderr)
-        exit(1)
+    validations()
 
     main(args)

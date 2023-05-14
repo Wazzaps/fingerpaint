@@ -1,0 +1,55 @@
+name: fingerpaint
+summary: Draw using your laptop's touchpad
+description: Draw using your laptop's touchpad
+version: '1.2.7'
+grade: stable
+confinement: strict
+base: core22
+license: GPL-2.0
+icon: snap/gui/fingerpaint.svg
+architectures:
+  - build-on: [amd64]
+
+apps:
+  fingerpaint:
+    command-chain:
+      - bin/debian-multiarch-triplet-provider-launch
+      - bin/tcltk-launch
+    command: bin/fingerpaint
+    plugs: [desktop, wayland, x11, hardware-observe, raw-input, gsettings]
+    environment:
+      PYTHONPATH: "$PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.10:$SNAP/usr/lib/python3.10/lib-dynload"
+      GI_TYPELIB_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/girepository-1.0"
+
+parts:
+  fingerpaint:
+    plugin: python
+    source: "."
+    build-packages: [python3-tk, libglib2.0-bin, gsettings-desktop-schemas] 
+    stage-packages: [python3-tk, python3-dbus, python3-gi, xinput, libglib2.0-bin, dconf-cli, gsettings-desktop-schemas]
+
+  desktop-settings-build:
+    plugin: nil
+    after: [fingerpaint]
+    build-packages: [libglib2.0-bin, gsettings-desktop-schemas] 
+    stage-packages: [libglib2.0-bin, gsettings-desktop-schemas]
+    override-prime: |
+       set -eux
+       snapcraftctl prime
+       ls -l usr/share/glib-2.0/
+       ls -l usr/share/glib-2.0/schemas
+       glib-compile-schemas usr/share/glib-2.0/schemas
+  
+  debian-multiarch-triplet-provider-launch:
+    plugin: nil
+    stage-snaps:
+      - debian-multiarch-triplet-provider-launch
+
+  tcltk-launch:
+    plugin: nil
+    stage-snaps:
+      - tcltk-launch   
+
+layout:
+  /usr/share/tcltk:
+    bind: $SNAP/usr/share/tcltk
