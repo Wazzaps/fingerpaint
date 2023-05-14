@@ -1,6 +1,5 @@
 name: fingerpaint
 summary: Draw using your laptop's touchpad
-description: Draw using your laptop's touchpad
 version: '1.3.0'
 grade: stable
 confinement: strict
@@ -8,7 +7,21 @@ base: core22
 license: GPL-2.0
 icon: snap/gui/fingerpaint.svg
 architectures:
-  - build-on: [amd64]
+  - amd64
+  - arm64
+donation:
+  - "https://github.com/sponsors/Wazzaps"
+  - "https://liberapay.com/wazzaps"
+contact: "david.shlemayev@gmail.com"
+issues: "https://github.com/Wazzaps/fingerpaint/issues"
+website: "https://github.com/Wazzaps/fingerpaint"
+source-code: "https://github.com/Wazzaps/fingerpaint"
+title: Fingerpaint
+description: |
+  This utility lets you draw using your laptop's touchpad.
+  Pressing any key or clicking the touchpad will finish the drawing.
+  Your touchpad will not control the cursor while drawing, though external mice should still work.
+  It has support for both X11 (all desktop environments), and Wayland (just Gnome at the moment).
 
 apps:
   fingerpaint:
