@@ -30,6 +30,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
         hint_font_size: float,
         hint_font_weight: str,
         hint_font_color: str,
+        line_color: str,
         output_file: Optional[Path],
         touchpad_locker,
         **kwargs,
@@ -58,6 +59,16 @@ class FingerpaintWindow(Adw.ApplicationWindow):
             and hint_font_color[0] == "#"
             and all(c in "0123456789abcdef" for c in hint_font_color[1:])
         ), "Font color must be a hex color code with a leading '#'"
+        assert (
+            len(line_color) == 7
+            and line_color[0] == "#"
+            and all(c in "0123456789abcdef" for c in line_color[1:])
+        ), "Font color must be a hex color code with a leading '#'"
+        self.line_color = (
+            int(line_color[1:3], 16) / 255,
+            int(line_color[3:5], 16) / 255,
+            int(line_color[5:7], 16) / 255,
+        )
 
         # Set window properties
         self.set_title(title)
@@ -156,7 +167,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
             # Don't draw anything if the spinner is shown
             return
         ctx = cairo.Context(self.visible_canvas)
-        ctx.set_source_rgb(1.0, 1.0, 1.0)
+        ctx.set_source_rgb(*self.line_color)
         ctx.set_line_width(5.0)
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
         visible_canvas_width = self.visible_canvas.get_width()

@@ -9,7 +9,7 @@ from fingerpaint.touchpad_locking import MockTouchpadLocker
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
-from gi.repository import Gtk, Gdk, Adw, GdkPixbuf, GObject
+from gi.repository import Gtk, Gdk, Adw, GdkPixbuf, GObject, Gio
 from fingerpaint.main_window import FingerpaintWindow
 from fingerpaint.common import FatalError
 
@@ -25,6 +25,7 @@ class FingerpaintApp(Adw.Application):
 
         win = None
         with catch_errors(self, win):
+            is_dark = self.is_dark_theme()
             touchpad = Touchpad(width=600)
             touchpad_locker = get_touchpad_locker(touchpad.devname)
 
@@ -55,7 +56,8 @@ class FingerpaintApp(Adw.Application):
                 hint_font_family="sans-serif",
                 hint_font_size=16,
                 hint_font_weight="bold",
-                hint_font_color="#555555",
+                hint_font_color="#555555" if is_dark else "#aaaaaa",
+                line_color="#cccccc" if is_dark else "#000000",
                 output_file=None,
                 touchpad_locker=touchpad_locker,
             )
@@ -81,6 +83,13 @@ class FingerpaintApp(Adw.Application):
                 GObject.idle_add(win.save_and_quit)
 
             threading.Thread(target=event_thread, daemon=True).start()
+
+    @staticmethod
+    def is_dark_theme():
+        return (
+            Gio.Settings.new("org.gnome.desktop.interface")["color-scheme"]
+            == "prefer-dark"
+        )
 
 
 def smooth_lines(events, smooth_radius):
