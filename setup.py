@@ -4,11 +4,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='fingerpaint',
-    version='1.3.0',
-    entry_points={
-        'console_scripts': 'fingerpaint=fingerpaint.fingerpaint:cli'
-    },
+    name="fingerpaint",
+    version="1.4.0",
+    entry_points={"console_scripts": "fingerpaint=fingerpaint.fingerpaint:cli"},
     author="David Shlemayev",
     author_email="david.shlemayev@gmail.com",
     description="Draw using your laptop's touchpad",
@@ -26,13 +24,9 @@ setuptools.setup(
         "Topic :: Multimedia :: Graphics :: Editors :: Raster-Based",
         "Topic :: Utilities",
     ],
-    install_requires=[
-        'evdev >= 1.3.0',
-        'Pillow >= 5.3.0',
-        'pyudev'
-    ],
+    install_requires=["evdev >= 1.3.0", "Pillow >= 5.3.0", "pyudev"],
     package_data={
-        'fingerpaint': ['data/fix_permissions.sh'],
+        "fingerpaint": ["data/fix_permissions.sh"],
     },
-    python_requires='>=3.7',
+    python_requires=">=3.7",
 )

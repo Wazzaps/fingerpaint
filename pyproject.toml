@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "fingerpaint"
+version = "1.4.0"
+description = "Draw using your laptop's touchpad"
+authors = ["David Shlemayev <david.shlemayev@gmail.com>"]
+license = "GPL-2.0"
+readme = "README.md"
+repository = "https://github.com/Wazzaps/fingerpaint"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    "Environment :: X11 Applications",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Artistic Software",
+    "Topic :: Multimedia :: Graphics :: Editors :: Raster-Based",
+    "Topic :: Utilities",
+]
+packages = [
+    { include = "fingerpaint" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+evdev = "^1.6.1"
+pyudev = "^0.24.1"
+Pillow = "^9.5.0"
+PyGObject = "^3.44.1"
+pycairo = ">=1.20.0,<=1.22.0"  # Don't update this! New version depends on a symbol that doesn't exist in snap's core22
+pydbus = "^0.6.0"
+
+[tool.poetry.dev-dependencies]
+ipython = "^8.13.2"
+
+[tool.poetry.scripts]
+fingerpaint = "fingerpaint.fingerpaint:cli"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

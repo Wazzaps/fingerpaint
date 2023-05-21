@@ -1,6 +1,7 @@
 import os
+import urllib.parse
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 IS_SANDBOXED = "SNAP" in os.environ
 
@@ -14,56 +15,70 @@ else:
     GSETTINGS_SCHEMA_DIR_PARAM = []
 
 
-def get_output_file_path(window_title="Save file", parent_window="") -> Optional[Path]:
-    import dbus.mainloop.glib
-    import gi.repository.GLib
+def get_output_file_path(
+    callback: Callable[[Optional[Path]], None],
+    default_file_name: str = "",
+    window_title: str = "Save as...",
+    parent_window: str = "",
+):
+    import gi
+    from gi.repository import GLib, Gio
 
-    glib_mainloop = gi.repository.GLib.MainLoop()
-    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-
-    bus = dbus.SessionBus()
-    file_chooser = dbus.Interface(
-        bus.get_object(
-            "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop", introspect=False,
-        ),
+    bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    file_chooser = Gio.DBusProxy.new_sync(
+        bus,
+        Gio.DBusProxyFlags.NONE,
+        None,
+        "org.freedesktop.portal.Desktop",
+        "/org/freedesktop/portal/desktop",
         "org.freedesktop.portal.FileChooser",
+        None,
     )
-
-    obj_id = file_chooser.SaveFile(
-        parent_window,  # parent_window
-        window_title,  # title
-        {  # options
-            "current_name": "Untitled.png",
-            "current_filter": ("PNG Image", [(dbus.UInt32(1), "image/png")]),
-        },
-        signature="ssa{sv}",
+    obj_id = file_chooser.call_sync(
+        "SaveFile",
+        GLib.Variant(
+            "(ssa{sv})",
+            (
+                parent_window,  # parent_window
+                window_title,  # title
+                {  # options
+                    "current_name": GLib.Variant("s", default_file_name),
+                    "current_filter": GLib.Variant(
+                        "(sa(us))", ("PNG Image", [(1, "image/png")])
+                    ),
+                },
+            ),
+        ),
+        Gio.DBusCallFlags.NO_AUTO_START,
+        500,
+        None,
     )
 
     result_uri = None
 
-    def on_response(result, d):
+    def on_response(*args):
         nonlocal result_uri
-        glib_mainloop.quit()
-        receiver.remove()
-        if result == 0:
-            result_uri = str(d["uris"][0])
+        params = args[5]
+        retcode = params[0]
+        if retcode == 0:
+            result_uri = str(params[1]["uris"][0])
+            assert result_uri.startswith("file://"), f"Unsupported URI: {result_uri}"
+            callback(Path(urllib.parse.unquote(result_uri)[len("file://") :]))
+        else:
+            callback(None)
+        bus.signal_unsubscribe(receiver)
 
-    receiver = bus.add_signal_receiver(
-        on_response,
-        "Response",
-        "org.freedesktop.portal.Request",
+    receiver = bus.signal_subscribe(
         None,
-        obj_id,
+        "org.freedesktop.portal.Request",
+        "Response",
+        obj_id[0],
+        None,
+        Gio.DBusSignalFlags.NONE,
+        on_response,
+        None,
     )
 
-    glib_mainloop.run()
 
-    if result_uri:
-        assert result_uri.startswith("file://"), f"Unsupported URI: {result_uri}"
-        result_uri = Path(result_uri[len("file://") :])
-
-    return result_uri
-
-
-if __name__ == '__main__':
-    print(get_output_file_path())
+if __name__ == "__main__":
+    get_output_file_path(lambda p: print(p))

@@ -1,6 +1,6 @@
 name: fingerpaint
 summary: Draw using your laptop's touchpad
-version: '1.3.0'
+version: '1.4.0'
 grade: stable
 confinement: strict
 base: core22
@@ -25,26 +25,36 @@ description: |
 
 apps:
   fingerpaint:
-    command-chain:
-      - bin/debian-multiarch-triplet-provider-launch
-      - bin/tcltk-launch
+    extensions: [gnome]
     command: bin/fingerpaint
     plugs: [desktop, wayland, x11, hardware-observe, raw-input, gsettings]
+    slots: [dbus-fingerpaint]
     environment:
-      PYTHONPATH: "$PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.10:$SNAP/usr/lib/python3.10/lib-dynload"
+      PYTHONPATH: "$PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.10:$SNAP/usr/lib/python3.10/lib-dynload:$SNAP/lib/python3.10/site-packages"
       GI_TYPELIB_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/girepository-1.0"
 
 parts:
   fingerpaint:
     plugin: python
     source: "."
-    build-packages: [python3-tk, libglib2.0-bin, gsettings-desktop-schemas] 
-    stage-packages: [python3-tk, python3-dbus, python3-gi, xinput, libglib2.0-bin, dconf-cli, gsettings-desktop-schemas]
+    build-packages: [libcairo2, libglib2.0-bin, gsettings-desktop-schemas]
+    stage-packages: [python3-gi, gir1.2-gtk-4.0, libcairo2, xinput, libglib2.0-bin, dconf-cli, gsettings-desktop-schemas]
+    override-pull: |
+      snapcraftctl pull
+      pip install --user dephell[full]
+      rm -f setup.py
+      PATH=$HOME/.local/bin:$PATH dephell deps convert --from-path pyproject.toml --from-format poetry --to-path setup.py --to-format setuppy
+      cat setup.py
+    override-prime: |
+      cp ~/.local/bin/fingerpaint ~/prime/bin/fingerpaint
+      cp -r ~/.local/lib/python3.10/site-packages ~/prime/lib/python3.10/
+      sed -i 's:#!/snap/.*/current/usr/bin/python3:#!/usr/bin/python3:g' ~/prime/bin/fingerpaint
+      snapcraftctl prime
 
   desktop-settings-build:
     plugin: nil
     after: [fingerpaint]
-    build-packages: [libglib2.0-bin, gsettings-desktop-schemas] 
+    build-packages: [libglib2.0-bin, gsettings-desktop-schemas]
     stage-packages: [libglib2.0-bin, gsettings-desktop-schemas]
     override-prime: |
        set -eux
@@ -52,17 +62,9 @@ parts:
        ls -l usr/share/glib-2.0/
        ls -l usr/share/glib-2.0/schemas
        glib-compile-schemas usr/share/glib-2.0/schemas
-  
-  debian-multiarch-triplet-provider-launch:
-    plugin: nil
-    stage-snaps:
-      - debian-multiarch-triplet-provider-launch
 
-  tcltk-launch:
-    plugin: nil
-    stage-snaps:
-      - tcltk-launch   
-
-layout:
-  /usr/share/tcltk:
-    bind: $SNAP/usr/share/tcltk
+slots:
+  dbus-fingerpaint:
+    interface: dbus
+    bus: session
+    name: com.github.wazzaps.Fingerpaint
