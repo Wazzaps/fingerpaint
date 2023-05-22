@@ -1,13 +1,17 @@
-{ lib, buildPythonApplication, setuptools, evdev, pillow, pyudev, tkinter }:
+{ lib, buildPythonApplication, setuptools, evdev, pillow, pyudev, gst-python, gobject-introspection, libadwaita, wrapGAppsHook }:
 
 buildPythonApplication rec {
   pname = "fingerpaint";
-  version = builtins.elemAt (builtins.match ".*version='([^']+)'.*" (builtins.readFile ./setup.py)) 0;
+  version = builtins.elemAt (builtins.match ".*version=\"([^\"]+)\".*" (builtins.readFile ./setup.py)) 0;
 
   src = ./.;
 
+  nativeBuildInputs = [
+    gobject-introspection wrapGAppsHook
+  ];
+
   propagatedBuildInputs = [
-    setuptools evdev pillow pyudev tkinter
+    setuptools evdev pillow pyudev gst-python libadwaita
   ];
 
   meta = with lib; {

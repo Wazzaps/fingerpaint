@@ -104,7 +104,7 @@ class MockTouchpad:
                 y = math.sin(x / 100 * 2 * math.pi) * 50 + 50
                 y2 = math.sin((x + 1) / 100 * 2 * math.pi) * 50 + 50
                 yield [((x / 200, y / 100), ((x + 1) / 200, y2 / 100))]
-                time.sleep(0.0001)
+                time.sleep(0.01)
 
         if width is not None:
             self.scaled_size = (width, int(width / val_range[0] * val_range[1]))

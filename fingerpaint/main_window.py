@@ -242,64 +242,69 @@ class FingerpaintWindow(Adw.ApplicationWindow):
                 #     self._gtk_file_chooser(actually_save_file)
 
     def _gtk_file_chooser(self, callback):
-        file_chooser = Gtk.FileChooserDialog(
-            title="Save painting...",
-            action=Gtk.FileChooserAction.SAVE,
-        )
-        file_chooser.add_button("_Cancel", Gtk.ResponseType.CANCEL)
-        file_chooser.add_button("_Save", Gtk.ResponseType.OK)
-
-        def file_chooser_response(dialog, response):
-            dialog.hide()
-            if response == Gtk.ResponseType.OK:
-                file_path = dialog.get_file().get_path()
-                threading.Thread(
-                    target=callback,
-                    args=(Path(file_path),),
-                ).start()
-            else:
-                GObject.idle_add(self.get_application().quit)
-
-        file_chooser.set_transient_for(self)
-        file_chooser.connect("response", file_chooser_response)
-        file_chooser.set_current_name(
-            f"Painting {datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.png"
-        )
-        file_chooser.set_current_folder(
-            Gio.File.new_for_path(str(Path.home() / "Pictures"))
-        )
-        file_chooser.set_modal(True)
-        file_chooser.show()
+        # Doesn't work in sandbox
+        pass
+        # file_chooser = Gtk.FileChooserDialog(
+        #     title="Save painting...",
+        #     action=Gtk.FileChooserAction.SAVE,
+        # )
+        # file_chooser.add_button("_Cancel", Gtk.ResponseType.CANCEL)
+        # file_chooser.add_button("_Save", Gtk.ResponseType.OK)
+        #
+        # def file_chooser_response(dialog, response):
+        #     dialog.hide()
+        #     if response == Gtk.ResponseType.OK:
+        #         file_path = dialog.get_file().get_path()
+        #         threading.Thread(
+        #             target=callback,
+        #             args=(Path(file_path),),
+        #         ).start()
+        #     else:
+        #         GObject.idle_add(self.get_application().quit)
+        #
+        # file_chooser.set_transient_for(self)
+        # file_chooser.connect("response", file_chooser_response)
+        # file_chooser.set_current_name(
+        #     f"Painting {datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.png"
+        # )
+        # file_chooser.set_current_folder(
+        #     Gio.File.new_for_path(str(Path.home() / "Pictures"))
+        # )
+        # file_chooser.set_modal(True)
+        # file_chooser.show()
 
     def _broken_native_file_chooser(self, callback):
-        file_chooser = Gtk.FileChooserNative.new(
-            title="Save as...",
-            parent=self,
-            action=Gtk.FileChooserAction.SAVE,
-            accept_label=None,
-            cancel_label=None,
-        )
-
-        def file_dialog_response(dialog, response):
-            if response == Gtk.ResponseType.ACCEPT:
-                print(dialog.get_file().get_path())
-                print(dialog.get_filename())
-                # threading.Thread(
-                #     target=actually_save_file,
-                #     args=(Path(dialog.get_filename()),),
-                # ).start()
-            else:
-                GObject.idle_add(self.get_application().quit)
-
-        file_chooser.set_transient_for(self)
-        file_chooser.connect("response", file_dialog_response)
-        file_chooser.set_current_name(
-            f"Painting {datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.png"
-        )
-        file_chooser.set_modal(True)
-        file_chooser.show()
+        # Doesn't work outside sandbox
+        pass
+        # file_chooser = Gtk.FileChooserNative.new(
+        #     title="Save as...",
+        #     parent=self,
+        #     action=Gtk.FileChooserAction.SAVE,
+        #     accept_label=None,
+        #     cancel_label=None,
+        # )
+        #
+        # def file_dialog_response(dialog, response):
+        #     if response == Gtk.ResponseType.ACCEPT:
+        #         print(dialog.get_file().get_path())
+        #         print(dialog.get_filename())
+        #         # threading.Thread(
+        #         #     target=actually_save_file,
+        #         #     args=(Path(dialog.get_filename()),),
+        #         # ).start()
+        #     else:
+        #         GObject.idle_add(self.get_application().quit)
+        #
+        # file_chooser.set_transient_for(self)
+        # file_chooser.connect("response", file_dialog_response)
+        # file_chooser.set_current_name(
+        #     f"Painting {datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')}.png"
+        # )
+        # file_chooser.set_modal(True)
+        # file_chooser.show()
 
     def _broken_new_file_chooser(self):
+        # Doesn't work on versions that actually exist
         pass
         # file_dialog = Gtk.FileDialog.new()
         #

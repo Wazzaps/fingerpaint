@@ -19,6 +19,27 @@ class FingerpaintApp(Adw.Application):
         super().__init__(**kwargs)
         self.connect("activate", self.on_activate)
 
+    @staticmethod
+    def _load_css(css_data: str):
+        """
+        Honestly what the fuck were you thinking, GTK, changing such an API without bumping your major version?
+        """
+        css_provider = Gtk.CssProvider()
+
+        try:
+            css_provider.load_from_data(
+                css_data,
+                -1,
+            )
+        except Exception as e:
+            css_provider.load_from_data(css_data.encode())
+
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
     def on_activate(self, app):
         from fingerpaint.touchpad import Touchpad, MockTouchpad
         from fingerpaint.touchpad_locking import get_touchpad_locker
@@ -32,18 +53,12 @@ class FingerpaintApp(Adw.Application):
             # touchpad = MockTouchpad(width=600)
             # touchpad_locker = MockTouchpadLocker()
 
-            css_provider = Gtk.CssProvider()
-            css_provider.load_from_data(
-                b"""
+            self._load_css(
+                """
                 .shade-bg {
                     background-color: rgba(0, 0, 0, 0.4);
                 }
-                """
-            )
-            Gtk.StyleContext.add_provider_for_display(
-                Gdk.Display.get_default(),
-                css_provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+                """,
             )
 
             win = FingerpaintWindow(
