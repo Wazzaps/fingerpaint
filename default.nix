@@ -1,8 +1,8 @@
-{ lib, buildPythonApplication, setuptools, evdev, pillow, pyudev, gst-python, gobject-introspection, libadwaita, wrapGAppsHook }:
+{ lib, buildPythonApplication, setuptools, evdev, pyudev, gst-python, gobject-introspection, libadwaita, wrapGAppsHook, udev }:
 
 buildPythonApplication rec {
   pname = "fingerpaint";
-  version = builtins.elemAt (builtins.match ".*version=\"([^\"]+)\".*" (builtins.readFile ./setup.py)) 0;
+  version = builtins.elemAt (builtins.match ".*version = \"([^\"]+)\".*" (builtins.readFile ./pyproject.toml)) 0;
 
   src = ./.;
 
@@ -11,8 +11,13 @@ buildPythonApplication rec {
   ];
 
   propagatedBuildInputs = [
-    setuptools evdev pillow pyudev gst-python libadwaita
+    setuptools evdev pyudev gst-python libadwaita udev
   ];
+
+  preFixup = ''
+  wrapProgram $out/bin/fingerpaint \
+  --prefix LD_LIBRARY_PATH ":" "${udev.out}/lib" \
+  '';
 
   meta = with lib; {
     description = "Draw using your laptop's touchpad";

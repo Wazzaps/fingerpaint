@@ -5,6 +5,7 @@ import cairo
 from pathlib import Path
 from typing import Optional
 from xml.sax.saxutils import escape as xml_escape
+from fingerpaint.common import FatalError
 from fingerpaint.error_dialog import (
     show_fatal_error,
     show_fatal_exception,
@@ -31,6 +32,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
         hint_font_weight: str,
         hint_font_color: str,
         line_color: str,
+        line_thickness: int,
         output_file: Optional[Path],
         touchpad_locker,
         **kwargs,
@@ -42,33 +44,50 @@ class FingerpaintWindow(Adw.ApplicationWindow):
         self.touchpad_locker = touchpad_locker
 
         # Sanitize parameters
-        assert (
-            '"' not in hint_font_family and "\\" not in hint_font_family
-        ), "Font family must not contain double quotes or backslashes"
-        assert hint_font_size >= 0, "Font size must not be negative"
-        assert hint_font_weight in (
+        if '"' in hint_font_family or "\\" in hint_font_family:
+            raise FatalError(
+                "Font family must not contain double quotes or backslashes"
+            )
+
+        if hint_font_size < 0:
+            raise FatalError("Font size must not be negative")
+
+        if hint_font_weight not in (
             "ultralight",
             "light",
             "normal",
             "bold",
             "ultrabold",
             "heavy",
-        ), "Font weight must be one of 'ultralight', 'light', 'normal', 'bold', 'ultrabold', 'heavy'"
-        assert (
-            len(hint_font_color) == 7
-            and hint_font_color[0] == "#"
-            and all(c in "0123456789abcdef" for c in hint_font_color[1:])
-        ), "Font color must be a hex color code with a leading '#'"
-        assert (
-            len(line_color) == 7
-            and line_color[0] == "#"
-            and all(c in "0123456789abcdef" for c in line_color[1:])
-        ), "Font color must be a hex color code with a leading '#'"
+        ):
+            raise FatalError(
+                "Font weight must be one of 'ultralight', 'light', 'normal', 'bold', 'ultrabold', 'heavy'"
+            )
+
+        if (
+            len(hint_font_color) != 7
+            or hint_font_color[0] != "#"
+            or not all(c in "0123456789abcdef" for c in hint_font_color[1:].lower())
+        ):
+            raise FatalError("Font color must be a hex color code with a leading '#'")
+
+        if (
+            len(line_color) != 7
+            or line_color[0] != "#"
+            or not all(c in "0123456789abcdef" for c in line_color[1:].lower())
+        ):
+            raise FatalError("Font color must be a hex color code with a leading '#'")
+
         self.line_color = (
-            int(line_color[1:3], 16) / 255,
-            int(line_color[3:5], 16) / 255,
-            int(line_color[5:7], 16) / 255,
+            int(line_color[1:3].lower(), 16) / 255,
+            int(line_color[3:5].lower(), 16) / 255,
+            int(line_color[5:7].lower(), 16) / 255,
         )
+
+        if line_thickness < 0:
+            raise FatalError("Line thickness must not be negative")
+
+        self.line_thickness = line_thickness
 
         # Set window properties
         self.set_title(title)
@@ -83,7 +102,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
         self.header_bar = Adw.HeaderBar()
         self.header_bar.set_valign(Gtk.Align.START)
         self.header_bar.add_css_class("flat")
-        title_widget = Gtk.Label(label="Fingerpaint")
+        title_widget = Gtk.Label(label=title)
         title_widget.add_css_class("title")
         self.header_bar.set_title_widget(title_widget)
         self.title_revealer = Gtk.Revealer()
@@ -129,7 +148,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
             f'face="{hint_font_family}" '
             f'size="{hint_font_size}pt" '
             f'weight="{hint_font_weight}" '
-            f'color="{hint_font_color}">'
+            f'color="{hint_font_color.lower()}">'
             f"{xml_escape(hint)}"
             f"</span>"
         )
@@ -145,6 +164,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
 
         # All together
         overlay = Gtk.Overlay()
+        overlay.add_css_class("fingerpaint-window-bg")
         overlay.add_overlay(hint_label)
         overlay.add_overlay(self.drawing_area)
         overlay.add_overlay(self.spinner_revealer)
@@ -168,7 +188,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
             return
         ctx = cairo.Context(self.visible_canvas)
         ctx.set_source_rgb(*self.line_color)
-        ctx.set_line_width(5.0)
+        ctx.set_line_width(self.line_thickness)
         ctx.set_line_cap(cairo.LINE_CAP_ROUND)
         visible_canvas_width = self.visible_canvas.get_width()
         visible_canvas_height = self.visible_canvas.get_height()
@@ -222,7 +242,10 @@ class FingerpaintWindow(Adw.ApplicationWindow):
 
             def actually_save_file(path: Optional[Path]):
                 if path:
-                    self.output_canvas.write_to_png(str(path))
+                    if path == "-":
+                        self.output_canvas.write_to_png("/dev/stdout")
+                    else:
+                        self.output_canvas.write_to_png(str(path))
                 GObject.idle_add(self.get_application().quit)
 
             if self.output_file:

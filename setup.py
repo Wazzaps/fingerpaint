@@ -1,11 +1,16 @@
 import setuptools
+import re
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open("pyproject.toml", "r") as fh:
+    pyproject = fh.read()
+    pyproject_version = re.search(r'version = "(.*)"', pyproject).group(1)
+
 setuptools.setup(
     name="fingerpaint",
-    version="1.4.0",
+    version=pyproject_version,
     entry_points={"console_scripts": "fingerpaint=fingerpaint.fingerpaint:cli"},
     author="David Shlemayev",
     author_email="david.shlemayev@gmail.com",
@@ -24,9 +29,13 @@ setuptools.setup(
         "Topic :: Multimedia :: Graphics :: Editors :: Raster-Based",
         "Topic :: Utilities",
     ],
-    install_requires=["evdev >= 1.3.0", "Pillow >= 5.3.0", "pyudev"],
+    install_requires=[
+        "evdev >= 1.6.1",
+        "pyudev >= 0.24.0",
+        "PyGObject >= 3.44.1",
+    ],
     package_data={
         "fingerpaint": ["data/fix_permissions.sh"],
     },
-    python_requires=">=3.7",
+    python_requires=">=3.10",
 )
