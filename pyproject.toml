@@ -21,14 +21,15 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.7"
 evdev = "^1.6.1"
 pyudev = "^0.24.1"
 PyGObject = "^3.44.1"
 pycairo = ">=1.20.0,<=1.22.0"  # Don't update this! New version depends on a symbol that doesn't exist in snap's core22
+setuptools = "^67.8.0"
 
 [tool.poetry.dev-dependencies]
-ipython = "^8.13.2"
+ipython = "^7.0"
 
 [tool.poetry.scripts]
 fingerpaint = "fingerpaint.fingerpaint:cli"

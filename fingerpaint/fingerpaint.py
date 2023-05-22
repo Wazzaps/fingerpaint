@@ -231,11 +231,11 @@ class FingerpaintApp(Adw.Application):
 
             self.validations()
 
+            is_dark = False
             if "light" in options:
                 Adw.StyleManager.get_default().set_color_scheme(
                     Adw.ColorScheme.FORCE_LIGHT
                 )
-                is_dark = False
             elif "dark" in options or self.is_dark_theme():
                 Adw.StyleManager.get_default().set_color_scheme(
                     Adw.ColorScheme.FORCE_DARK
@@ -326,7 +326,9 @@ class FingerpaintApp(Adw.Application):
         except KeyError:
             gtk_theme = ""
 
-        return color_scheme == "prefer-dark" or "dark" in gtk_theme.lower()
+        is_dark = Adw.StyleManager.get_default().get_dark()
+
+        return color_scheme == "prefer-dark" or "dark" in gtk_theme.lower() or is_dark
 
     @staticmethod
     def validations():
