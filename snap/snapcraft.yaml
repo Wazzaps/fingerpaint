@@ -27,41 +27,18 @@ apps:
   fingerpaint:
     extensions: [gnome]
     command: bin/fingerpaint
-    plugs: [desktop, wayland, x11, hardware-observe, raw-input, gsettings]
-    slots: [dbus-fingerpaint]
-    environment:
-      PYTHONPATH: "$PYTHONPATH:$SNAP/usr/lib/python3/dist-packages:$SNAP/usr/lib/python3.10:$SNAP/usr/lib/python3.10/lib-dynload:$SNAP/lib/python3.10/site-packages"
-      GI_TYPELIB_PATH: "$SNAP/usr/lib/x86_64-linux-gnu/girepository-1.0"
+    plugs: [hardware-observe, raw-input]
 
 parts:
   fingerpaint:
     plugin: python
-    source: "."
-    build-packages: [libcairo2, libglib2.0-bin, gsettings-desktop-schemas]
-    stage-packages: [python3-gi, gir1.2-gtk-4.0, libcairo2, xinput, libglib2.0-bin, dconf-cli, gsettings-desktop-schemas]
-    override-pull: |
-      snapcraftctl pull
-      pip install --user dephell[full]
-      rm -f setup.py
-      PATH=$HOME/.local/bin:$PATH dephell deps convert --from-path pyproject.toml --from-format poetry --to-path setup.py --to-format setuppy
-      cat setup.py
-    override-prime: |
-      cp ~/.local/bin/fingerpaint ~/prime/bin/fingerpaint
-      cp -r ~/.local/lib/python3.10/site-packages ~/prime/lib/python3.10/
-      sed -i 's:#!/snap/.*/current/usr/bin/python3:#!/usr/bin/python3:g' ~/prime/bin/fingerpaint
-      snapcraftctl prime
-
-  desktop-settings-build:
+    source: .
+  depends:
     plugin: nil
-    after: [fingerpaint]
-    build-packages: [libglib2.0-bin, gsettings-desktop-schemas]
-    stage-packages: [libglib2.0-bin, gsettings-desktop-schemas]
-    override-prime: |
-       set -eux
-       snapcraftctl prime
-       ls -l usr/share/glib-2.0/
-       ls -l usr/share/glib-2.0/schemas
-       glib-compile-schemas usr/share/glib-2.0/schemas
+    stage-packages:
+      - xinput
+    prime:
+      - usr/bin/xinput
 
 slots:
   dbus-fingerpaint:
