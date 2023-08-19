@@ -12,19 +12,19 @@ update-flatpak-deps:
 
 .PHONY: flatpak-install
 flatpak-install:
-	flatpak-builder --user --install --force-clean flatpak/build flatpak/com.github.wazzaps.Fingerpaint.yml
+	flatpak-builder --user --install --force-clean flatpak/build flatpak/io.github.wazzaps.Fingerpaint.yml
 
 .PHONY: flatpak
 flatpak:
 	@mkdir -p flatpak/repo flatpak/build
-	flatpak-builder --repo=flatpak/repo --force-clean flatpak/build flatpak/com.github.wazzaps.Fingerpaint.yml
+	flatpak-builder --repo=flatpak/repo --force-clean flatpak/build flatpak/io.github.wazzaps.Fingerpaint.yml
 
 .PHONY: update-flathub
 update-flathub: flatpak/flathub-repo
 	@echo "Updating flathub repo at flatpak/flathub-repo"
-	@cp flatpak/com.github.wazzaps.Fingerpaint.yml flatpak/com.github.wazzaps.Fingerpaint.metainfo.xml flatpak/generated-poetry-sources.json flatpak/flathub-repo/
-	@python3 flatpak/download_externals.py flatpak/flathub-repo/com.github.wazzaps.Fingerpaint.yml flatpak/flathub-repo/generated-poetry-sources.json
-	@python3 flatpak/flatpak_local_to_git.py flatpak/flathub-repo/com.github.wazzaps.Fingerpaint.yml
+	@cp flatpak/io.github.wazzaps.Fingerpaint.yml flatpak/io.github.wazzaps.Fingerpaint.metainfo.xml flatpak/generated-poetry-sources.json flatpak/flathub-repo/
+	@python3 flatpak/download_externals.py flatpak/flathub-repo/io.github.wazzaps.Fingerpaint.yml flatpak/flathub-repo/generated-poetry-sources.json
+	@python3 flatpak/flatpak_local_to_git.py flatpak/flathub-repo/io.github.wazzaps.Fingerpaint.yml
 
 .PHONY: clean
 clean:

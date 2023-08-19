@@ -5,5 +5,5 @@ Name=Fingerpaint
 Comment=Draw using your laptop's touchpad
 Exec=fingerpaint
 Terminal=false
-Icon=com.github.wazzaps.Fingerpaint
+Icon=io.github.wazzaps.Fingerpaint
 Categories=Graphics;2DGraphics;RasterGraphics;Art;Utility;

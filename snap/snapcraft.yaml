@@ -44,4 +44,4 @@ slots:
   dbus-fingerpaint:
     interface: dbus
     bus: session
-    name: com.github.wazzaps.Fingerpaint
+    name: io.github.wazzaps.Fingerpaint

@@ -19,7 +19,7 @@ It has support for both X11 (all desktop environments), and Wayland (just Gnome 
 ### Any distro using `flatpak` (from Flathub)
 
 ```shell
-flatpak install --user com.github.wazzaps.Fingerpaint
+flatpak install --user io.github.wazzaps.Fingerpaint
 ```
 
 ### Any distro using `snap`

@@ -26,7 +26,7 @@ class FingerpaintApp(Adw.Application):
 
     def __init__(self, **kwargs):
         super().__init__(
-            application_id="com.github.wazzaps.Fingerpaint",
+            application_id="io.github.wazzaps.Fingerpaint",
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
             **kwargs,
         )
