@@ -207,11 +207,20 @@ class FingerpaintApp(Adw.Application):
 
         if options.get("output", None) not in ("-", None) and IS_SANDBOXED:
             show_fatal_error(
-                "Cannot write to arbitrary file path in sandboxed mode\n"
+                "Cannot write to arbitrary file path in sandboxed mode.\n"
                 "Please either omit `--output` or use `--output=-` for stdout, then redirect the output to a file",
                 self,
             )
             return 1
+
+        if options.get("output", None) == "-":
+            if sys.stdout.isatty():
+                show_fatal_error(
+                    "Tried to write output to stdout without redirecting to a file.\n"
+                    "Try: fingerpaint -o - > my_image.png",
+                    self,
+                )
+                return 1
 
         self.options = options
         self.activate()
@@ -222,6 +231,7 @@ class FingerpaintApp(Adw.Application):
         options = self.options
         self.options = {}
 
+        ok = False
         with catch_errors(self):
             if options is None:
                 options = {}
@@ -233,13 +243,9 @@ class FingerpaintApp(Adw.Application):
 
             is_dark = False
             if "light" in options:
-                Adw.StyleManager.get_default().set_color_scheme(
-                    Adw.ColorScheme.FORCE_LIGHT
-                )
+                Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_LIGHT)
             elif "dark" in options or self.is_dark_theme():
-                Adw.StyleManager.get_default().set_color_scheme(
-                    Adw.ColorScheme.FORCE_DARK
-                )
+                Adw.StyleManager.get_default().set_color_scheme(Adw.ColorScheme.FORCE_DARK)
                 is_dark = True
 
             from fingerpaint.touchpad import Touchpad, MockTouchpad
@@ -289,6 +295,10 @@ class FingerpaintApp(Adw.Application):
                 touchpad_locker=touchpad_locker,
             )
             win.present()
+            ok = True
+
+        if not ok:
+            return
 
         with catch_errors(self, win):
 
@@ -339,14 +349,14 @@ class FingerpaintApp(Adw.Application):
 
         if os.environ["XDG_SESSION_TYPE"] == "wayland":
             try:
-                sp.check_output(["dconf", "help"])
+                sp.check_output(["gsettings", "help"])
             except sp.CalledProcessError:
                 raise FatalError(
-                    "`dconf` fails to run, it's required in Wayland based desktop environments"
+                    "`gsettings` fails to run, it's required in Wayland based desktop environments"
                 )
             except FileNotFoundError:
                 raise FatalError(
-                    "`dconf` binary not installed, install it with your package manager (Called `dconf-cli` on Ubuntu, or `dconf` on Arch)\n"
+                    "`gsettings` binary not installed, install it with your package manager (Called `libglib2.0-bin` on Ubuntu, or `glib2` on Arch)\n"
                     "It's required for Wayland based desktop environments."
                 )
         else:
@@ -376,9 +386,7 @@ def smooth_lines(events, smooth_radius):
                 anchor = line[0]
                 new_lines.append(line)
             else:
-                distance = (
-                    (line[1][0] - anchor[0]) ** 2 + (line[1][1] - anchor[1]) ** 2
-                ) ** 0.5
+                distance = ((line[1][0] - anchor[0]) ** 2 + (line[1][1] - anchor[1]) ** 2) ** 0.5
                 if distance > smooth_radius:
                     new_lines.append((anchor, line[1]))
                     anchor = line[1]

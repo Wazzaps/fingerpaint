@@ -140,3 +140,7 @@ cython_debug/
 
 /.idea/
 *.snap
+.flatpak-builder
+flatpak/repo
+flatpak/build
+flatpak/flathub-repo

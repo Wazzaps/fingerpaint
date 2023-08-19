@@ -1,4 +1,6 @@
 import datetime
+import io
+import sys
 import threading
 import gi
 import cairo
@@ -45,9 +47,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
 
         # Sanitize parameters
         if '"' in hint_font_family or "\\" in hint_font_family:
-            raise FatalError(
-                "Font family must not contain double quotes or backslashes"
-            )
+            raise FatalError("Font family must not contain double quotes or backslashes")
 
         if hint_font_size < 0:
             raise FatalError("Font size must not be negative")
@@ -137,9 +137,7 @@ class FingerpaintWindow(Adw.ApplicationWindow):
         else:
             output_width = 1920
             output_height = int(height / width * 1920)
-        self.output_canvas = cairo.ImageSurface(
-            cairo.FORMAT_ARGB32, output_width, output_height
-        )
+        self.output_canvas = cairo.ImageSurface(cairo.FORMAT_ARGB32, output_width, output_height)
 
         # Hint
         hint_label = Gtk.Label(yalign=0.9)
@@ -243,7 +241,9 @@ class FingerpaintWindow(Adw.ApplicationWindow):
             def actually_save_file(path: Optional[Path]):
                 if path:
                     if path == "-":
-                        self.output_canvas.write_to_png("/dev/stdout")
+                        buffer = io.BytesIO()
+                        self.output_canvas.write_to_png(buffer)
+                        sys.stdout.buffer.write(buffer.getvalue())
                     else:
                         self.output_canvas.write_to_png(str(path))
                 GObject.idle_add(self.get_application().quit)

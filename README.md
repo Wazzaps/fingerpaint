@@ -16,12 +16,23 @@ It has support for both X11 (all desktop environments), and Wayland (just Gnome 
 
 ## Installation
 
+### Any distro using `flatpak` (from Flathub)
+
+```shell
+flatpak install --user com.github.wazzaps.Fingerpaint
+```
+
+### Any distro using `snap`
+
+```shell
+sudo snap install fingerpaint
+```
+
 ### Ubuntu / Debian
 
 ```shell
-sudo apt install libglib2.0-bin xinput python3-pip python3-tk
+sudo apt install libglib2.0-bin xinput python3-pip libcairo2-dev libgirepository1.0-dev python3-setuptools python3-cairo-dev libgtk-4-dev gir1.2-gtk-4.0 gir1.2-adw-1
 sudo pip3 install fingerpaint
-sudo fingerpaint --fix-perms  # This command lets you run the utility without `sudo`
 ```
 
 ### Arch / Manjaro
@@ -39,15 +50,18 @@ nix profile install github:Wazzaps/fingerpaint
 ## Usage examples
 ```shell
 # Simple usage
+fingerpaint
+
+# Output to file
 fingerpaint -o painting.png
 
 # Play with style
 fingerpaint --dark -o painting.png
 
-# Copy to clipboard (using bash)
+# Copy to clipboard (when using bash)
 fingerpaint --hint=$'Press any key or click to finish drawing\nImage will be copied to clipboard' -o - | xclip -sel clip -t image/png
 
-# Copy to clipboard (using fish)
+# Copy to clipboard (when using fish)
 fingerpaint --hint="Press any key or click to finish drawing"\n"Image will be copied to clipboard" -o - | xclip -sel clip -t image/png
 ```
 

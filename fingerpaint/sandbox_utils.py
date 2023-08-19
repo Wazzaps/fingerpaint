@@ -3,16 +3,9 @@ import urllib.parse
 from pathlib import Path
 from typing import Optional, Callable
 
-IS_SANDBOXED = "SNAP" in os.environ
-
-if IS_SANDBOXED:
-    GSETTINGS_SCHEMA_DIR_PARAM = [
-        "--schemadir",
-        os.environ["SNAP"] + "/usr/share/glib-2.0/schemas",
-    ]
-
-else:
-    GSETTINGS_SCHEMA_DIR_PARAM = []
+IS_SNAP_SANDBOXED = "SNAP" in os.environ
+IS_FLATPAK_SANDBOXED = "FLATPAK_SANDBOX_DIR" in os.environ
+IS_SANDBOXED = IS_SNAP_SANDBOXED or IS_FLATPAK_SANDBOXED
 
 
 def get_output_file_path(
@@ -43,9 +36,7 @@ def get_output_file_path(
                 window_title,  # title
                 {  # options
                     "current_name": GLib.Variant("s", default_file_name),
-                    "current_filter": GLib.Variant(
-                        "(sa(us))", ("PNG Image", [(1, "image/png")])
-                    ),
+                    "current_filter": GLib.Variant("(sa(us))", ("PNG Image", [(1, "image/png")])),
                 },
             ),
         ),

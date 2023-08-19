@@ -1,7 +1,6 @@
 import os
 import subprocess as sp
 from fingerpaint.common import FatalError
-from fingerpaint.sandbox_utils import GSETTINGS_SCHEMA_DIR_PARAM
 
 
 class TouchpadLocker:
@@ -38,9 +37,12 @@ class GnomeWaylandTouchpadLocker(TouchpadLocker):
 
     def lock(self):
         self.prev_value = sp.check_output(
-            ["gsettings"]
-            + GSETTINGS_SCHEMA_DIR_PARAM
-            + ["get", "org.gnome.desktop.peripherals.touchpad", "send-events"]
+            [
+                "gsettings",
+                "get",
+                "org.gnome.desktop.peripherals.touchpad",
+                "send-events",
+            ]
         ).strip()
 
         # Fix for new gnome versions
@@ -58,9 +60,10 @@ class GnomeWaylandTouchpadLocker(TouchpadLocker):
 
         sp.call(
             [
-                "dconf",
-                "write",
-                "/org/gnome/desktop/peripherals/touchpad/send-events",
+                "gsettings",
+                "set",
+                "org.gnome.desktop.peripherals.touchpad",
+                "send-events",
                 "'disabled'",
             ]
         )
@@ -71,9 +74,10 @@ class GnomeWaylandTouchpadLocker(TouchpadLocker):
             return
         sp.call(
             [
-                "dconf",
-                "write",
-                "/org/gnome/desktop/peripherals/touchpad/send-events",
+                "gsettings",
+                "set",
+                "org.gnome.desktop.peripherals.touchpad",
+                "send-events",
                 self.prev_value,
             ]
         )

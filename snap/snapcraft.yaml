@@ -1,6 +1,6 @@
 name: fingerpaint
 summary: Draw using your laptop's touchpad
-version: '1.4.0'
+version: '1.4.1'
 grade: stable
 confinement: strict
 base: core22

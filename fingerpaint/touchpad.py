@@ -1,16 +1,21 @@
 import math
+import os
 import select
 import sys
 import time
 import evdev
 import pkg_resources
 import pyudev
+from pathlib import Path
 from typing import Optional
 from fingerpaint.common import FatalError
+from fingerpaint.sandbox_utils import IS_FLATPAK_SANDBOXED
 
-fix_perms_script = pkg_resources.resource_filename(
-    "fingerpaint", "data/fix_permissions.sh"
-)
+fix_perms_script = pkg_resources.resource_filename("fingerpaint", "data/fix_permissions.sh")
+if IS_FLATPAK_SANDBOXED:
+    fix_perms_script_sandboxed = (
+        Path(os.environ["FLATPAK_SANDBOX_DIR"]).parent / "fix_permissions.sh"
+    )
 
 
 class Touchpad:
@@ -45,15 +50,13 @@ class Touchpad:
                     if event.type == evdev.ecodes.EV_ABS:
                         if event.code == evdev.ecodes.ABS_X:
                             wip_pos = (
-                                (event.value - x_absinfo.min)
-                                / (x_absinfo.max - x_absinfo.min),
+                                (event.value - x_absinfo.min) / (x_absinfo.max - x_absinfo.min),
                                 wip_pos[1],
                             )
                         if event.code == evdev.ecodes.ABS_Y:
                             wip_pos = (
                                 wip_pos[0],
-                                (event.value - y_absinfo.min)
-                                / (y_absinfo.max - y_absinfo.min),
+                                (event.value - y_absinfo.min) / (y_absinfo.max - y_absinfo.min),
                             )
                     if event.type == evdev.ecodes.EV_KEY:
                         if event.code == evdev.ecodes.BTN_TOUCH and event.value == 0:
@@ -127,9 +130,9 @@ def get_touchpad(udev):
 
 def get_touchpads(udev):
     for device in udev.list_devices(ID_INPUT_TOUCHPAD="1"):
-        if device.device_node is not None and device.device_node.rpartition("/")[
-            2
-        ].startswith("event"):
+        if device.device_node is not None and device.device_node.rpartition("/")[2].startswith(
+            "event"
+        ):
             yield device
 
 
@@ -143,8 +146,14 @@ def get_device_name(dev):
 
 
 def permission_error():
+    if IS_FLATPAK_SANDBOXED:
+        fix_perms_script_sandboxed.write_text(Path(fix_perms_script).read_text())
+        fix_perms_script_sandboxed.chmod(0o755)
+        script_path = str(fix_perms_script_sandboxed)
+    else:
+        script_path = fix_perms_script
     raise FatalError(
         "Failed to access touchpad!\n"
         "To fix this, Please run the following command, then rerun fingerpaint:\n\n"
-        f"sudo {fix_perms_script}"
+        f"sudo {script_path}"
     )

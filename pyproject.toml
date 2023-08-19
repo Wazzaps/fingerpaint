@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fingerpaint"
-version = "1.4.0"
+version = "1.4.1"
 description = "Draw using your laptop's touchpad"
 authors = ["David Shlemayev <david.shlemayev@gmail.com>"]
 license = "GPL-2.0"
@@ -30,6 +30,7 @@ setuptools = "^67.8.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.0"
+toml = "^0.10.2"
 
 [tool.poetry.scripts]
 fingerpaint = "fingerpaint.fingerpaint:cli"
