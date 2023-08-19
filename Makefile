@@ -22,7 +22,7 @@ flatpak:
 .PHONY: update-flathub
 update-flathub: flatpak/flathub-repo
 	@echo "Updating flathub repo at flatpak/flathub-repo"
-	@cp flatpak/io.github.wazzaps.Fingerpaint.yml flatpak/flathub-repo/
+	@cp flatpak/io.github.wazzaps.Fingerpaint.yml flatpak/generated-poetry-sources.json flatpak/flathub-repo/
 	@python3 flatpak/flatpak_local_to_git.py flatpak/flathub-repo/io.github.wazzaps.Fingerpaint.yml
 
 .PHONY: clean
