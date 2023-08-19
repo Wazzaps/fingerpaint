@@ -41,6 +41,7 @@ def process_file(path: Path):
             """    sources:
       - type: git
         tag: "{git_tag}"
+        url: "https://github.com/wazzaps/fingerpaint"
         commit: "{git_commit_hash}"
 """,
         )
