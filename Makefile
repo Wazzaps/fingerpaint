@@ -8,7 +8,7 @@ all:
 
 .PHONY: update-flatpak-deps
 update-flatpak-deps:
-	external/flatpak-poetry-generator.py poetry.lock -o flatpak/generated-poetry-sources.json --production
+	external/flatpak-poetry-generator.py poetry.lock -o flatpak/generated-poetry-sources.json --production --exclude=pycairo --exclude=pygobject
 
 .PHONY: flatpak-install
 flatpak-install:

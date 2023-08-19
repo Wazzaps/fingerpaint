@@ -48,11 +48,14 @@ def get_pypi_source(name: str, version: str, hashes: list) -> tuple:
             raise Exception("Failed to extract url and hash from {}".format(url))
 
 
-def get_module_sources(parsed_lockfile: dict, include_devel: bool = True) -> list:
+def get_module_sources(
+    parsed_lockfile: dict, exclude: list[str], include_devel: bool = True
+) -> list:
     """Gets the list of sources from a toml parsed lockfile.
 
     Args:
         parsed_lockfile (dict): The dictionary of the parsed lockfile.
+        exclude (list): The list of dependency names to exclude.
         include_devel (bool): Include dev dependencies, defaults to True.
 
     Returns (list): The sources.
@@ -63,6 +66,9 @@ def get_module_sources(parsed_lockfile: dict, include_devel: bool = True) -> lis
     for section, packages in parsed_lockfile.items():
         if section == "package":
             for package in packages:
+                if package["name"] in exclude:
+                    continue
+
                 if (
                     package["category"] == "dev"
                     and include_devel
@@ -92,9 +98,7 @@ def get_module_sources(parsed_lockfile: dict, include_devel: bool = True) -> lis
                             match = hash_re.search(file["hash"])
                             if match:
                                 hashes.append(match.group(2))
-                    url, hash = get_pypi_source(
-                        package["name"], package["version"], hashes
-                    )
+                    url, hash = get_pypi_source(package["name"], package["version"], hashes)
                     source = {"type": "file", "url": url, "sha256": hash}
                     sources.append(source)
     return sources
@@ -128,10 +132,9 @@ def get_dep_names(parsed_lockfile: dict, include_devel: bool = True) -> list:
 def main():
     parser = argparse.ArgumentParser(description="Flatpak Poetry generator")
     parser.add_argument("lockfile", type=str)
-    parser.add_argument(
-        "-o", type=str, dest="outfile", default="generated-poetry-sources.json"
-    )
+    parser.add_argument("-o", type=str, dest="outfile", default="generated-poetry-sources.json")
     parser.add_argument("--production", action="store_true", default=False)
+    parser.add_argument("--exclude", action="append", default=[])
     args = parser.parse_args()
 
     include_devel = not args.production
@@ -143,6 +146,7 @@ def main():
     with open(lockfile, "r") as f:
         parsed_lockfile = toml.load(f)
         dep_names = get_dep_names(parsed_lockfile, include_devel=include_devel)
+        dep_names = [dep for dep in dep_names if dep not in args.exclude]
         pip_command = [
             "pip3",
             "install",
@@ -158,7 +162,9 @@ def main():
                 ("build-commands", [" ".join(pip_command)]),
             ]
         )
-        sources = get_module_sources(parsed_lockfile, include_devel=include_devel)
+        sources = get_module_sources(
+            parsed_lockfile, exclude=args.exclude, include_devel=include_devel
+        )
         main_module["sources"] = sources
 
     print(" ... %d new entries" % len(sources), file=sys.stderr)
