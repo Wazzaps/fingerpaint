@@ -21,7 +21,6 @@ modules:
     buildsystem: autotools
     cleanup:
       - '/share/man'
-      - '/lib/debug'
     sources:
       - type: git
         url: "https://gitlab.freedesktop.org/xorg/app/xinput.git"
