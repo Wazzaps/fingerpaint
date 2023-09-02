@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fingerpaint"
-version = "1.4.1"
+version = "1.4.2"
 description = "Draw using your laptop's touchpad"
 authors = ["David Shlemayev <david.shlemayev@gmail.com>"]
 license = "GPL-2.0"

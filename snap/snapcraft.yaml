@@ -1,6 +1,6 @@
 name: fingerpaint
 summary: Draw using your laptop's touchpad
-version: '1.4.1'
+version: '1.4.2'
 grade: stable
 confinement: strict
 base: core22
@@ -33,6 +33,9 @@ parts:
   fingerpaint:
     plugin: python
     source: .
+    override-pull: |
+      snapcraftctl pull
+      mv fingerpaint/data/fix_permissions.snap.sh fingerpaint/data/fix_permissions.sh
   depends:
     plugin: nil
     stage-packages:
